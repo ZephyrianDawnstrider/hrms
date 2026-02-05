@@ -33,11 +33,8 @@ ENV ALLOWED_HOSTS=localhost
 # Collect static files
 RUN python manage.py collectstatic --noinput
 
-# Run migrations
-RUN python manage.py migrate --noinput
-
 # Expose port
 EXPOSE 10000
 
-# Run the application
-CMD gunicorn --bind 0.0.0.0:$PORT --workers 2 hrms.wsgi:application
+# Run migrations and start the application
+CMD python migrate_and_sync.py && gunicorn --bind 0.0.0.0:$PORT --workers 2 hrms.wsgi:application
