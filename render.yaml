@@ -1,15 +1,20 @@
 services:
   - type: web
     name: hrms-lite
-    env: docker
+    env: python
     plan: free
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+    startCommand: |
+      python migrate_and_sync.py && gunicorn hrms.wsgi:application
     envVars:
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
         value: False
+      - key: DATABASE_URL
+        sync: false
       - key: ALLOWED_HOSTS
         sync: false
       - key: CSRF_TRUSTED_ORIGINS

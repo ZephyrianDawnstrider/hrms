@@ -62,6 +62,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'hrms.middleware.DatabaseHealthMiddleware',  # Database health monitoring
 ]
 
 ROOT_URLCONF = 'hrms.urls'
@@ -87,15 +88,40 @@ WSGI_APPLICATION = 'hrms.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Use dj-database-url to configure database from DATABASE_URL environment variable
-# Falls back to SQLite for local development
-DATABASES = {
-    'default': dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
-}
+# PostgreSQL as primary database with SQLite as backup/fallback
+# If DATABASE_URL is set in environment, use PostgreSQL with SQLite backup
+# Otherwise, use SQLite for local development
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    # Production mode: PostgreSQL with SQLite backup
+    DATABASES = {
+        # Primary database - PostgreSQL
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+            ssl_require=False,  # Set to True in production if SSL is required
+        ),
+        # Backup database - SQLite (used when PostgreSQL is unavailable)
+        'backup': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db_backup.sqlite3',
+            'ATOMIC_REQUESTS': True,
+            'CONN_MAX_AGE': 600,
+        }
+    }
+    # Enable database router for automatic fallback
+    DATABASE_ROUTERS = ['hrms.db_router.FallbackDatabaseRouter']
+else:
+    # Local development mode: SQLite only
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+            'ATOMIC_REQUESTS': True,
+        }
+    }
 
 
 # Password validation
