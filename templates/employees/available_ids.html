@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Available Employee IDs{% endblock %}
+
+{% block content %}
+    <h1>Employee ID Management</h1>
+    
+    <div style="background: white; padding: 20px; margin-bottom: 20px; border-radius: 5px;">
+        <h2>Current Status</h2>
+        <p><strong>Total Active Employees:</strong> {{ total_employees }}</p>
+        
+        {% if used_ids %}
+            <h3>Used Employee IDs:</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0;">
+                {% for id in used_ids %}
+                    <span style="background: #f0f0f0; padding: 5px 10px; border-radius: 3px; border: 1px solid #ddd;">{{ id }}</span>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: #666;">No employees registered yet. All IDs are available.</p>
+        {% endif %}
+    </div>
+    
+    {% if suggestions %}
+        <div style="background: #e8f5e8; padding: 20px; border-radius: 5px; border-left: 4px solid #4CAF50;">
+            <h3>Suggested Available IDs:</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0;">
+                {% for suggestion in suggestions %}
+                    <span style="background: #4CAF50; color: white; padding: 8px 15px; border-radius: 3px; font-weight: bold;">{{ suggestion }}</span>
+                {% endfor %}
+            </div>
+            <p style="color: #666; font-size: 0.9em;">These IDs are calculated based on your current highest employee ID.</p>
+        </div>
+    {% endif %}
+    
+    <div style="margin-top: 20px;">
+        <a href="{% url 'employee_add' %}">Add New Employee</a>
+        <a href="{% url 'employee_list' %}" style="margin-left: 20px;">Back to Employee List</a>
+    </div>
+{% endblock %}

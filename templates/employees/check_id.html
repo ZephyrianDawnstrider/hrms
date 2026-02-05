@@ -1,0 +1,7 @@
+{% if employee_id %}
+    {% if available %}
+        <span style="color: green; font-weight: bold;">✓ Employee ID "{{ employee_id }}" is available</span>
+    {% else %}
+        <span style="color: red; font-weight: bold;">✗ Employee ID "{{ employee_id }}" is already in use</span>
+    {% endif %}
+{% endif %}

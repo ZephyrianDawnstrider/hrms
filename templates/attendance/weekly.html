@@ -1,0 +1,519 @@
+{% extends 'base.html' %}
+{% load attendance_filters %}
+
+{% block title %}Weekly Attendance{% endblock %}
+
+{% block content %}
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .attendance-container {
+            max-width: 100%;
+            padding: 20px;
+        }
+        
+        .filter-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .filter-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+        
+        .week-nav {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .week-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background: #45a049;
+        }
+        
+        .bulk-actions {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .bulk-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        .bulk-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .bulk-actions label {
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .bulk-actions span {
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .bulk-actions select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 2px solid white;
+            background: white;
+            font-weight: 500;
+            min-width: 150px;
+        }
+        
+        .action-btn {
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .btn-present {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-absent {
+            background: #f44336;
+            color: white;
+        }
+        
+        .btn-clear {
+            background: #9e9e9e;
+            color: white;
+        }
+        
+        .table-wrapper {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow-x: auto;
+            overflow-y: visible;
+            min-width: max-content; 
+        }
+        
+        .attendance-table {
+            width: max-content;
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 100%;
+        }
+
+        
+        .attendance-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            font-weight: 600;
+            text-align: center;
+            white-space: nowrap;
+        }
+        
+        .attendance-table th:first-child {
+            border-top-left-radius: 8px;
+        }
+        
+        .attendance-table th:last-child {
+            border-top-right-radius: 8px;
+        }
+        
+        .attendance-table th.today-col {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .attendance-table td {
+            padding: 12px 10px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+        }
+        
+        .attendance-table tbody tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .attendance-table tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
+        
+        .attendance-table tbody tr:nth-child(even):hover {
+            background: #f0f0f0;
+        }
+        
+        .employee-name {
+            font-weight: 600;
+            color: #333;
+            text-align: left;
+            min-width: 180px;
+        }
+        
+        .attendance-select {
+            width: auto;
+            max-width: auto;
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .attendance-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .status-present {
+            background: #c8e6c9;
+            color: #2e7d32;
+            font-weight: bold;
+            border-color: #4CAF50;
+        }
+        
+        .status-absent {
+            background: #ffcdd2;
+            color: #c62828;
+            font-weight: bold;
+            border-color: #f44336;
+        }
+        
+        .status-na {
+            background: white;
+            color: #999;
+        }
+        
+        .today-cell {
+            background: #fff3e0 !important;
+        }
+        
+        .history-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        
+        .history-link:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .scroll-hint {
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+        }
+        
+        @media (max-width: 1200px) {
+            .filter-form > div {
+                width: auto;
+            }
+        }
+
+    </style>
+
+    <div class="attendance-container">
+        <h1 style="color: #333; margin-bottom: 20px;">📊 Weekly Attendance</h1>
+        
+        <!-- Filters Section -->
+        <div class="filter-section">
+            <form method="get" action="{% url 'weekly_attendance' %}" class="filter-form">
+                <div style="flex: 1; min-width: 200px;">
+                    <label for="department" style="display: block; margin-bottom: 5px; font-weight: 500;">Department:</label>
+                    <select name="department" id="department" onchange="this.form.submit()" style="width: 100%;">
+                        <option value="">All Departments</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept }}" {% if selected_department == dept %}selected{% endif %}>{{ dept }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div style="flex: 1; min-width: 200px;">
+                    <label for="employee_id" style="display: block; margin-bottom: 5px; font-weight: 500;">Employee ID/Name:</label>
+                    <input type="text" name="employee_id" id="employee_id" value="{{ selected_employee_id }}" placeholder="Search..." style="width: 100%;">
+                </div>
+                
+                <div style="display: flex; gap: 10px; align-items: flex-end;">
+                    <button type="submit" style="white-space: nowrap;">🔍 Filter</button>
+                    <a href="{% url 'weekly_attendance' %}" style="padding: 10px 20px; background: #f5f5f5; color: #333; text-decoration: none; border-radius: 4px; display: inline-block; white-space: nowrap;">Clear</a>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- Week Navigation -->
+        <div class="week-nav">
+            <div class="week-header">
+                <a href="?week_offset={{ prev_week_offset }}{% if selected_department %}&department={{ selected_department }}{% endif %}{% if selected_employee_id %}&employee_id={{ selected_employee_id }}{% endif %}" class="nav-btn">
+                    ← Previous Week
+                </a>
+                
+                <div style="text-align: center;">
+                    <div style="font-size: 1.4em; font-weight: bold; color: #333;">
+                        {{ current_month_name }} {{ current_year }}
+                    </div>
+                    <div style="font-size: 0.95em; color: #666; margin-top: 5px;">
+                        {{ week_dates.0|date:"M d" }} - {{ week_dates.6|date:"M d, Y" }}
+                        {% if today in week_dates %}
+                            <span style="color: #4CAF50; font-weight: bold;">● Current Week</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <a href="?week_offset={{ next_week_offset }}{% if selected_department %}&department={{ selected_department }}{% endif %}{% if selected_employee_id %}&employee_id={{ selected_employee_id }}{% endif %}" class="nav-btn">
+                    Next Week →
+                </a>
+            </div>
+        </div>
+
+        <!-- Bulk Actions -->
+        <div class="bulk-actions">
+            <div class="bulk-row">
+                <label>
+                    <input type="checkbox" id="select-all" onchange="toggleSelectAll()" style="width: 18px; height: 18px;">
+                    <strong>Select All Employees</strong>
+                </label>
+                <span>|</span>
+                <span id="selected-count" style="font-weight: 500;">0 selected</span>
+            </div>
+            <div class="bulk-row">
+                <label style="color: white; font-weight: 500;">Select Date:</label>
+                <select id="bulk-date-select" style="padding: 8px 12px; border-radius: 6px; border: 2px solid white; background: white; font-weight: 500; min-width: 180px;">
+                    {% for date in week_dates %}
+                        <option value="{{ date|date:'Y-m-d' }}" {% if date == today %}selected{% endif %}>
+                            {{ date|date:"l, M d, Y" }} {% if date == today %}(Today){% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+                <span>|</span>
+                <button onclick="markSelected('Present')" class="action-btn btn-present">✓ Mark Present</button>
+                <button onclick="markSelected('Absent')" class="action-btn btn-absent">✗ Mark Absent</button>
+                <button onclick="markSelected('')" class="action-btn btn-clear">○ Clear</button>
+            </div>
+        </div>
+
+        <!-- Attendance Table -->
+        <form id="attendance-form" method="post" action="{% url 'mark_bulk_attendance' %}" >
+            {% csrf_token %}
+            
+            <div class="table-wrapper">
+                {% if employees %}
+                    <div class="scroll-hint">
+                        ← Scroll horizontally to see all days of the week →
+                    </div>
+                    <table class="attendance-table">
+
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">
+                                    <input type="checkbox" id="select-all-header" onchange="toggleSelectAll()" style="cursor: pointer; width: 18px; height: 18px;">
+                                </th>
+                                <th class="employee-name">Employee Name</th>
+                                <th style="min-width: 100px;">Employee ID</th>
+                                <th style="min-width: 120px;">Department</th>
+                                {% for date in week_dates %}
+                                    <th class="{% if date == today %}today-col{% endif %}" style="min-width: 130px;">
+                                        <div style="font-size: 0.9em;">{{ date|date:"D" }}</div>
+                                        <div style="font-size: 1.2em; margin: 3px 0;">{{ date|date:"d" }}</div>
+                                        <div style="font-size: 0.85em; opacity: 0.9;">{{ date|date:"M" }}</div>
+                                        {% if date == today %}
+                                            <div style="font-size: 0.75em; margin-top: 2px;">(Today)</div>
+                                        {% endif %}
+                                    </th>
+                                {% endfor %}
+                                <th style="min-width: 80px;">History</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for employee in employees %}
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" name="selected_employees" value="{{ employee.id }}" class="employee-checkbox" onchange="updateSelectedCount()" style="cursor: pointer; width: 18px; height: 18px;">
+                                    </td>
+                                    <td class="employee-name">{{ employee.full_name }}</td>
+                                    <td>{{ employee.employee_id }}</td>
+                                    <td>{{ employee.department }}</td>
+                                    
+                                    {% for date in week_dates %}
+                                        <td class="{% if date == today %}today-cell{% endif %}">
+                                            {% with employee_id=employee.id|stringformat:"s" %}
+                                                {% with date_key=date|date:"Y-m-d" %}
+                                                    {% with status=attendance_data|get_dict_item:employee_id|get_dict_item:date_key %}
+                                                        <select name="attendance_{{ employee.id }}_{{ date|date:'Y-m-d' }}" 
+                                                                onchange="saveAttendance(this, '{{ employee.id }}', '{{ date|date:'Y-m-d' }}')"
+                                                                class="attendance-select {% if status == 'Present' %}status-present{% elif status == 'Absent' %}status-absent{% else %}status-na{% endif %}">
+                                                            <option value="" {% if not status %}selected{% endif %}>-</option>
+                                                            <option value="Present" {% if status == 'Present' %}selected{% endif %}>✓ Present</option>
+                                                            <option value="Absent" {% if status == 'Absent' %}selected{% endif %}>✗ Absent</option>
+                                                        </select>
+                                                    {% endwith %}
+                                                {% endwith %}
+                                            {% endwith %}
+                                        </td>
+                                    {% endfor %}
+                                    
+                                    <td>
+                                        <a href="{% url 'view_attendance' employee.id %}" class="history-link">View</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div style="text-align: center; padding: 60px 20px; color: #666;">
+                        <div style="font-size: 3em; margin-bottom: 20px;">📋</div>
+                        <h3 style="margin-bottom: 10px;">No employees found</h3>
+                        <p>
+                            {% if selected_department or selected_employee_id %}
+                                Try adjusting your filters or <a href="{% url 'weekly_attendance' %}" style="color: #667eea;">clear all filters</a>.
+                            {% else %}
+                                <a href="{% url 'employee_add' %}" style="color: #667eea;">Add employees</a> to start tracking attendance.
+                            {% endif %}
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function toggleSelectAll() {
+            const checkboxes = document.querySelectorAll('.employee-checkbox');
+            const selectAllHeader = document.getElementById('select-all-header');
+            const selectAllMain = document.getElementById('select-all');
+            const isChecked = selectAllHeader.checked || selectAllMain.checked;
+            
+            checkboxes.forEach(cb => cb.checked = isChecked);
+            selectAllHeader.checked = isChecked;
+            selectAllMain.checked = isChecked;
+            
+            updateSelectedCount();
+        }
+        
+        function updateSelectedCount() {
+            const checked = document.querySelectorAll('.employee-checkbox:checked').length;
+            document.getElementById('selected-count').textContent = checked + ' selected';
+        }
+        
+        function markSelected(status) {
+            const checked = document.querySelectorAll('.employee-checkbox:checked');
+            if (checked.length === 0) {
+                alert('⚠️ Please select at least one employee');
+                return;
+            }
+            
+            // Get the selected date from the dropdown
+            const dateSelect = document.getElementById('bulk-date-select');
+            const date = dateSelect.value;
+            
+            const employeeIds = Array.from(checked).map(cb => cb.value);
+            
+            const form = document.getElementById('attendance-form');
+            const formData = new FormData(form);
+            
+            formData.append('bulk_status', status);
+            formData.append('bulk_date', date);
+            formData.append('employee_ids', employeeIds.join(','));
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            }).then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('❌ Failed to save attendance');
+                }
+            });
+        }
+        
+        function saveAttendance(select, employeeId, date) {
+            const status = select.value;
+            const formData = new FormData();
+            formData.append('employee_id', employeeId);
+            formData.append('date', date);
+            formData.append('status', status);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+            
+            // Update visual feedback immediately
+            select.className = 'attendance-select';
+            if (status === 'Present') {
+                select.classList.add('status-present');
+            } else if (status === 'Absent') {
+                select.classList.add('status-absent');
+            } else {
+                select.classList.add('status-na');
+            }
+            
+            fetch('{% url "mark_bulk_attendance" %}', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (!response.ok) {
+                    alert('❌ Failed to save attendance');
+                }
+            });
+        }
+    </script>
+{% endblock %}
