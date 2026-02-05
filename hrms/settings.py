@@ -30,7 +30,12 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-if3#6b=zd=uccax+@^%ye
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# ALLOWED_HOSTS configuration
+allowed_hosts_env = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1')
+if ',' in allowed_hosts_env:
+    ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',')]
+else:
+    ALLOWED_HOSTS = [allowed_hosts_env.strip()] if allowed_hosts_env else ['*']
 
 
 
@@ -130,7 +135,11 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # CSRF trusted origins for Render
-CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', 'http://localhost:8000').split(',')
+csrf_origins_env = os.environ.get('CSRF_TRUSTED_ORIGINS', 'http://localhost:8000')
+if ',' in csrf_origins_env:
+    CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in csrf_origins_env.split(',')]
+else:
+    CSRF_TRUSTED_ORIGINS = [csrf_origins_env.strip()] if csrf_origins_env else []
 
 # Default primary key field type
 
